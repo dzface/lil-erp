@@ -1,0 +1,340 @@
+<!doctype html>
+<html>
+  <head>
+    <meta charset="UTF-8" />
+    <title>Lil-erp </title>
+    <!-- https://developer.mozilla.org/en-US/docs/Web/HTTP/CSP -->
+    <meta
+      http-equiv="Content-Security-Policy"
+      content="default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self' data:"
+    />
+
+    <link href="./assets/main.css" type="text/css" rel="stylesheet" />
+  </head>
+
+  <body>
+    <div id="app">
+      <div class="container">
+        <h1 class="title">재고관리 시스템</h1>
+        
+        <!-- 탭 네비게이션 -->
+        <div class="tabs">
+          <button class="tab-btn active" data-tab="raw-material-masters">원료 데이터 관리</button>
+          <button class="tab-btn" data-tab="raw-materials">원재료 입고</button>
+          <button class="tab-btn" data-tab="packing-materials">부자재</button>
+        </div>
+
+        <!-- 원료 데이터 관리 탭 -->
+        <div id="raw-material-masters-tab" class="tab-content active">
+          <div class="section-header">
+            <h2>원료 데이터 관리</h2>
+            <button id="add-raw-material-master-btn" class="btn btn-primary">+ 원료 등록</button>
+          </div>
+          
+          <div class="table-container">
+            <table id="raw-material-masters-table" class="data-table">
+              <thead>
+                <tr>
+                  <th>원료명</th>
+                  <th>소비기한</th>
+                  <th>패킹량</th>
+                  <th>단위</th>
+                  <th>공급업체</th>
+                  <th>원산지</th>
+                  <th>보관조건</th>
+                  <th>식품유형</th>
+                  <th>작업</th>
+                </tr>
+              </thead>
+              <tbody id="raw-material-masters-tbody">
+                <!-- 데이터가 여기에 동적으로 추가됩니다 -->
+              </tbody>
+            </table>
+          </div>
+        </div>
+
+        <!-- 원재료 입고 탭 -->
+        <div id="raw-materials-tab" class="tab-content">
+          <div class="section-header">
+            <h2>원재료 입고 내역</h2>
+            <button id="add-raw-material-btn" class="btn btn-primary">+ 입고 등록</button>
+          </div>
+          
+          <div class="table-container">
+            <table id="raw-materials-table" class="data-table">
+              <thead>
+                <tr>
+                  <th>시험번호</th>
+                  <th>원료명</th>
+                  <th>총 입고량</th>
+                  <th>패킹량</th>
+                  <th>단위</th>
+                  <th>수량</th>
+                  <th>제조일</th>
+                  <th>소비기한</th>
+                  <th>공급업체</th>
+                  <th>원산지</th>
+                  <th>보관조건</th>
+                  <th>식품유형</th>
+                  <th>작업</th>
+                </tr>
+              </thead>
+              <tbody id="raw-materials-tbody">
+                <!-- 데이터가 여기에 동적으로 추가됩니다 -->
+              </tbody>
+            </table>
+          </div>
+        </div>
+
+        <!-- 부자재 탭 -->
+        <div id="packing-materials-tab" class="tab-content">
+          <div class="section-header">
+            <h2>부자재 관리</h2>
+            <button id="add-packing-material-btn" class="btn btn-primary">+ 입고 등록</button>
+          </div>
+          
+          <div class="table-container">
+            <table id="packing-materials-table" class="data-table">
+              <thead>
+                <tr>
+                  <th>시험번호</th>
+                  <th>제품명</th>
+                  <th>자재명</th>
+                  <th>입고량</th>
+                  <th>제조번호</th>
+                  <th>소비기한</th>
+                  <th>검수결과</th>
+                  <th>종류</th>
+                  <th>납품처</th>
+                  <th>작업</th>
+                </tr>
+              </thead>
+              <tbody id="packing-materials-tbody">
+                <!-- 데이터가 여기에 동적으로 추가됩니다 -->
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- 원재료 모달 -->
+    <div id="raw-material-modal" class="modal">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h3 id="raw-material-modal-title">원재료 입고 등록</h3>
+          <button class="modal-close">&times;</button>
+        </div>
+        <form id="raw-material-form" class="modal-body">
+          <div class="form-grid">
+            <div class="form-group">
+              <label>시험번호 <span class="required">*</span></label>
+              <input type="text" id="raw-test-number" name="testNumber" required />
+              <small class="form-hint">자동 생성되며 수정 가능합니다</small>
+            </div>
+            <div class="form-group">
+              <label>원료명 <span class="required">*</span></label>
+              <div class="search-container">
+                <input type="text" id="raw-name" name="name" required autocomplete="off" />
+                <div id="raw-material-search-results" class="search-results"></div>
+              </div>
+            </div>
+            <div class="form-group">
+              <label>총 입고량 <span class="required">*</span></label>
+              <input type="number" id="raw-receiving-quantity" name="receivingQuantity" step="0.01" required />
+            </div>
+            <div class="form-group">
+              <label>패킹량 <span class="required">*</span></label>
+              <input type="number" id="raw-net-weight" name="netWeight" step="0.01" required />
+            </div>
+            <div class="form-group">
+              <label>단위 <span class="required">*</span></label>
+              <select id="raw-weight-unit" name="weightUnit" required>
+                <option value="kg">kg</option>
+                <option value="g">g</option>
+                <option value="mg">mg</option>
+              </select>
+            </div>
+            <div class="form-group">
+              <label>수량 <span class="required">*</span></label>
+              <input type="number" id="raw-quantity" name="quantity" required />
+            </div>
+            <div class="form-group">
+              <label>제조일 <span class="required">*</span></label>
+              <input type="date" id="raw-manufacturing-date" name="manufacturingDate" required />
+            </div>
+            <div class="form-group">
+              <label>소비기한 <span class="required">*</span></label>
+              <input type="date" id="raw-expire-date" name="expireDate" required />
+            </div>
+            <div class="form-group">
+              <label>공급업체 <span class="required">*</span></label>
+              <input type="text" id="raw-vendor" name="vendor" required />
+            </div>
+            <div class="form-group">
+              <label>원산지 <span class="required">*</span></label>
+              <input type="text" id="raw-country" name="country" required />
+            </div>
+            <div class="form-group">
+              <label>보관조건 <span class="required">*</span></label>
+              <select id="raw-storage-conditions" name="storageConditions" required>
+                <option value="Room Temperature">실온</option>
+                <option value="Freezing Temperature">냉동</option>
+                <option value="Refrigerating Temperature">냉장</option>
+              </select>
+            </div>
+            <div class="form-group">
+              <label>식품유형</label>
+              <input type="text" id="raw-food-type" name="foodType" />
+            </div>
+            <div class="form-group full-width">
+              <label>비고</label>
+              <textarea id="raw-memo" name="memo" rows="3"></textarea>
+            </div>
+          </div>
+          <div class="modal-footer">
+            <button type="button" class="btn btn-secondary modal-cancel">취소</button>
+            <button type="submit" class="btn btn-primary">저장</button>
+          </div>
+        </form>
+      </div>
+    </div>
+
+    <!-- 부자재 모달 -->
+    <div id="packing-material-modal" class="modal">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h3 id="packing-material-modal-title">부자재 입고 등록</h3>
+          <button class="modal-close">&times;</button>
+        </div>
+        <form id="packing-material-form" class="modal-body">
+          <div class="form-grid">
+            <div class="form-group">
+              <label>시험번호 <span class="required">*</span></label>
+              <input type="text" id="packing-test-number" name="testNumber" required readonly />
+              <small class="form-hint">자동 생성되며 수정 가능합니다</small>
+            </div>
+            <div class="form-group">
+              <label>제품명 <span class="required">*</span></label>
+              <input type="text" id="packing-product-name" name="productName" required />
+            </div>
+            <div class="form-group">
+              <label>자재명 <span class="required">*</span></label>
+              <input type="text" id="packing-material-name" name="materialName" required />
+            </div>
+            <div class="form-group">
+              <label>입고량 <span class="required">*</span></label>
+              <input type="number" id="packing-receiving-quantity" name="receivingQuantity" required />
+            </div>
+            <div class="form-group">
+              <label>제조번호 <span class="required">*</span></label>
+              <input type="text" id="packing-lot-number" name="lotNumber" required />
+            </div>
+            <div class="form-group">
+              <label>소비기한 <span class="required">*</span></label>
+              <input type="date" id="packing-expire-date" name="expireDate" required />
+            </div>
+            <div class="form-group">
+              <label>검수결과 <span class="required">*</span></label>
+              <select id="packing-result" name="result" required>
+                <option value="true">적합</option>
+                <option value="false">부적합</option>
+              </select>
+            </div>
+            <div class="form-group">
+              <label>종류 <span class="required">*</span></label>
+              <input type="text" id="packing-category" name="category" required />
+            </div>
+            <div class="form-group">
+              <label>납품처 <span class="required">*</span></label>
+              <input type="text" id="packing-vendor" name="vendor" required />
+            </div>
+            <div class="form-group full-width">
+              <label>비고</label>
+              <textarea id="packing-memo" name="memo" rows="3"></textarea>
+            </div>
+          </div>
+          <div class="modal-footer">
+            <button type="button" class="btn btn-secondary modal-cancel">취소</button>
+            <button type="submit" class="btn btn-primary">저장</button>
+          </div>
+        </form>
+      </div>
+    </div>
+
+    <!-- 원료 등록 모달 -->
+    <div id="raw-material-master-modal" class="modal">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h3 id="raw-material-master-modal-title">원료 등록</h3>
+          <button class="modal-close">&times;</button>
+        </div>
+        <form id="raw-material-master-form" class="modal-body">
+          <div class="form-grid">
+            <div class="form-group">
+              <label>원료명 <span class="required">*</span></label>
+              <input type="text" id="master-name" name="name" required />
+            </div>
+            <div class="form-group">
+              <label>소비기한 <span class="required">*</span></label>
+              <select id="master-shelf-life-days" name="shelfLifeDays" required>
+                <option value="365">1년</option>
+                <option value="547.5">1.5년</option>
+                <option value="730">2년</option>
+                <option value="912.5">2.5년</option>
+                <option value="1095">3년</option>
+                <option value="1277.5">3.5년</option>
+                <option value="1460">4년</option>
+                <option value="1642.5">4.5년</option>
+                <option value="1825">5년</option>
+              </select>
+              <small class="form-hint">제조일로부터 소비기한까지의 기간</small>
+            </div>
+            <div class="form-group">
+              <label>패킹량 <span class="required">*</span></label>
+              <input type="number" id="master-net-weight" name="netWeight" step="0.01" required />
+            </div>
+            <div class="form-group">
+              <label>단위 <span class="required">*</span></label>
+              <select id="master-weight-unit" name="weightUnit" required>
+                <option value="kg">kg</option>
+                <option value="g">g</option>
+                <option value="mg">mg</option>
+              </select>
+            </div>
+            <div class="form-group">
+              <label>공급업체 <span class="required">*</span></label>
+              <input type="text" id="master-vendor" name="vendor" required />
+            </div>
+            <div class="form-group">
+              <label>원산지 <span class="required">*</span></label>
+              <input type="text" id="master-country" name="country" required />
+            </div>
+            <div class="form-group">
+              <label>보관조건 <span class="required">*</span></label>
+              <select id="master-storage-conditions" name="storageConditions" required>
+                <option value="Room Temperature">실온</option>
+                <option value="Freezing Temperature">냉동</option>
+                <option value="Refrigerating Temperature">냉장</option>
+              </select>
+            </div>
+            <div class="form-group">
+              <label>식품유형</label>
+              <input type="text" id="master-food-type" name="foodType" />
+            </div>
+            <div class="form-group full-width">
+              <label>비고</label>
+              <textarea id="master-memo" name="memo" rows="3"></textarea>
+            </div>
+          </div>
+          <div class="modal-footer">
+            <button type="button" class="btn btn-secondary modal-cancel">취소</button>
+            <button type="submit" class="btn btn-primary">저장</button>
+          </div>
+        </form>
+      </div>
+    </div>
+
+    <script type="module" src="./src/renderer.ts"></script>
+  </body>
+</html>
