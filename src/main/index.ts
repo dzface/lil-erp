@@ -16,7 +16,10 @@ function createWindow(): void {
     height: 800,
     show: false,
     autoHideMenuBar: true,
-    ...(process.platform === 'linux' ? { icon } : {}),
+    // Set icon for Windows and Linux (dev mode and packaged). macOS uses .icns in the bundle.
+    ...(process.platform === 'linux' || process.platform === 'win32' ? { icon } : {}),
+    // Set a default window title (can be overridden by renderer)
+    title: app.name || 'lil-erp',
     webPreferences: {
       preload: join(__dirname, '../preload/index.js'),
       sandbox: false
