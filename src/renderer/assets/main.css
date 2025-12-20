@@ -140,6 +140,14 @@ body {
 .btn-delete:hover {
   background: #c0392b;
 }
+.btn-xlsx {
+  background: #00b846;
+  color: white;
+}
+
+.btn-xlsx:hover {
+  background: #00702b;
+}
 
 /* 테이블 스타일 */
 .table-container {

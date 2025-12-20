@@ -1,4 +1,5 @@
 import type { RawMaterial, PackingMaterial, RawMaterialMaster } from '../../shared/types'
+import * as XLSX from 'xlsx'
 
 // 현재 편집 중인 항목 ID
 let editingRawMaterialId: number | null = null
@@ -94,6 +95,97 @@ async function loadRawMaterials(): Promise<void> {
   } catch (error) {
     console.error('원재료 로드 실패:', error)
     alert('원재료 목록을 불러오는데 실패했습니다.')
+  }
+}
+
+// 원재료 목록을 .xlsx로 내보내기
+async function exportRawMaterialsToCSV(): Promise<void> {
+  try {
+    const materials = await window.api.rawMaterials.getAll()
+    if (!materials || materials.length === 0) {
+      alert('내보낼 원재료 데이터가 없습니다.')
+      return
+    }
+
+    const headers = [
+      '시험번호',
+      '원료명',
+      '총 입고량',
+      '패킹량',
+      '단위',
+      '수량',
+      '제조일',
+      '소비기한',
+      '공급업체',
+      '원산지',
+      '보관조건',
+      '식품유형'
+    ]
+
+    const rows = materials.map((m) => [
+      m.testNumber,
+      m.name,
+      m.receivingQuantity,
+      m.netWeight,
+      m.weightUnit,
+      m.quantity,
+      // 날짜는 실제 Date 객체로 유지하여 시트에서 날짜 타입으로 설정
+      new Date(m.manufacturingDate),
+      new Date(m.expireDate),
+      m.vendor,
+      m.country,
+      getStorageConditionLabel(m.storageConditions),
+      m.foodType || ''
+    ])
+
+    // AOA (Array of arrays) 로 시트 생성
+    const aoa = [headers, ...rows]
+    const ws = XLSX.utils.aoa_to_sheet(aoa)
+
+    // 제조일(열 G, 0-based col index 6)과 소비기한(열 H, index 7)을 날짜 형식으로 설정
+    const manufCol = 6
+    const expireCol = 7
+    for (let i = 0; i < rows.length; i++) {
+      const rowIndex = i + 1 // 헤더가 0행이므로 데이터는 1부터
+      const manufAddr = XLSX.utils.encode_cell({ c: manufCol, r: rowIndex })
+      const expireAddr = XLSX.utils.encode_cell({ c: expireCol, r: rowIndex })
+
+      const mDate = materials[i].manufacturingDate ? new Date(materials[i].manufacturingDate) : null
+      const eDate = materials[i].expireDate ? new Date(materials[i].expireDate) : null
+
+      if (mDate && !isNaN(mDate.getTime())) {
+        ws[manufAddr] = ws[manufAddr] || {}
+        ws[manufAddr].t = 'd'
+        ws[manufAddr].v = mDate
+        ws[manufAddr].z = 'yyyy-mm-dd'
+      }
+
+      if (eDate && !isNaN(eDate.getTime())) {
+        ws[expireAddr] = ws[expireAddr] || {}
+        ws[expireAddr].t = 'd'
+        ws[expireAddr].v = eDate
+        ws[expireAddr].z = 'yyyy-mm-dd'
+      }
+    }
+    const wb = XLSX.utils.book_new()
+    XLSX.utils.book_append_sheet(wb, ws, '원재료입고')
+
+    const wbout = XLSX.write(wb, { bookType: 'xlsx', type: 'array' })
+    const blob = new Blob([wbout], { type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' })
+
+    const url = URL.createObjectURL(blob)
+    const a = document.createElement('a')
+    const now = new Date()
+    const filename = `원재료_입고내역_${now.getFullYear()}${String(now.getMonth() + 1).padStart(2, '0')}${String(now.getDate()).padStart(2, '0')}.xlsx`
+    a.href = url
+    a.setAttribute('download', filename)
+    document.body.appendChild(a)
+    a.click()
+    document.body.removeChild(a)
+    URL.revokeObjectURL(url)
+  } catch (error) {
+    console.error('엑셀(.xlsx) 내보내기 실패:', error)
+    alert('엑셀(.xlsx) 내보내기에 실패했습니다.')
   }
 }
 
@@ -750,6 +842,9 @@ function init(): void {
   // 원재료 버튼 이벤트
   document.getElementById('add-raw-material-btn')?.addEventListener('click', () => {
     openRawMaterialModal()
+  })
+  document.getElementById('export-raw-materials-btn')?.addEventListener('click', () => {
+    exportRawMaterialsToCSV()
   })
   document.getElementById('raw-material-form')?.addEventListener('submit', saveRawMaterial)
 
