@@ -5,6 +5,68 @@ import * as XLSX from 'xlsx'
 let editingRawMaterialId: number | null = null
 let editingPackingMaterialId: number | null = null
 
+// 검색 관련 상태
+let rawMaterialsCache: RawMaterial[] = []
+let selectedSearchCategories: string[] = []
+
+const searchFieldLabels: Record<string, string> = {
+  testNumber: '시험번호',
+  name: '원료명',
+  receivingQuantity: '총 입고량',
+  netWeight: '패킹량',
+  weightUnit: '단위',
+  quantity: '수량',
+  manufacturingDate: '제조일',
+  expireDate: '소비기한',
+  vendor: '공급업체',
+  country: '원산지',
+  storageConditions: '보관조건',
+  foodType: '식품유형'
+}
+
+function renderSearchTags(): void {
+  const container = document.getElementById('raw-materials-search-tags')
+  if (!container) return
+  container.innerHTML = selectedSearchCategories
+    .map((k) => `<span class="search-tag" data-key="${k}" style="background:#2b2b2b;color:#fff;padding:4px 8px;border-radius:12px;font-size:12px;">${searchFieldLabels[k] || k} <button type="button" class="tag-remove" data-key="${k}" style="margin-left:6px;background:transparent;border:0;color:#fff;cursor:pointer">×</button></span>`)
+    .join('')
+}
+
+function addSearchCategory(key: string): void {
+  if (!searchFieldLabels[key]) return
+  if (selectedSearchCategories.includes(key)) return
+  selectedSearchCategories.push(key)
+  renderSearchTags()
+}
+
+function removeSearchCategory(key: string): void {
+  selectedSearchCategories = selectedSearchCategories.filter((k) => k !== key)
+  renderSearchTags()
+}
+
+function getSearchInputValue(): string {
+  const input = document.getElementById('raw-materials-search-input') as HTMLInputElement | null
+  return input ? input.value.trim() : ''
+}
+
+function filterMaterials(materials: RawMaterial[]): RawMaterial[] {
+  const q = getSearchInputValue().toLowerCase()
+  if (!q) return materials
+  const keys = selectedSearchCategories.length ? selectedSearchCategories : Object.keys(searchFieldLabels)
+  return materials.filter((m) => {
+    return keys.some((k) => {
+      const val: any = (m as any)[k]
+      if (val === null || val === undefined) return false
+      if (k === 'manufacturingDate' || k === 'expireDate') {
+        const d = new Date(val)
+        if (isNaN(d.getTime())) return false
+        return d.toISOString().split('T')[0].includes(q)
+      }
+      return String(val).toLowerCase().includes(q)
+    })
+  })
+}
+
 // 탭 전환
 function initTabs(): void {
   const tabButtons = document.querySelectorAll('.tab-btn')
@@ -41,12 +103,20 @@ async function loadRawMaterials(): Promise<void> {
     const tbody = document.getElementById('raw-materials-tbody')
     if (!tbody) return
 
+    rawMaterialsCache = materials
+
     if (materials.length === 0) {
       tbody.innerHTML = '<tr><td colspan="13" class="empty-message">등록된 원재료가 없습니다.</td></tr>'
       return
     }
 
-    tbody.innerHTML = materials
+    const filtered = filterMaterials(materials)
+    if (filtered.length === 0) {
+      tbody.innerHTML = '<tr><td colspan="13" class="empty-message">검색 결과가 없습니다.</td></tr>'
+      return
+    }
+
+    tbody.innerHTML = filtered
       .map(
         (m) => `
       <tr>
@@ -839,6 +909,34 @@ function init(): void {
   // 탭 초기화
   initTabs()
 
+  // 검색 관련 초기화: 헤더 클릭으로 카테고리 추가, 검색 입력/버튼 연결
+  setupRawMaterialHeaderSearchListeners()
+
+  const searchInput = document.getElementById('raw-materials-search-input') as HTMLInputElement | null
+  const searchBtn = document.getElementById('raw-materials-search-btn') as HTMLButtonElement | null
+
+  searchInput?.addEventListener('keydown', (e) => {
+    if (e.key === 'Enter') {
+      e.preventDefault()
+      loadRawMaterials()
+    }
+  })
+
+  searchBtn?.addEventListener('click', () => {
+    loadRawMaterials()
+  })
+
+  // 태그 삭제 이벤트 위임
+  document.getElementById('raw-materials-search-tags')?.addEventListener('click', (e) => {
+    const target = e.target as HTMLElement
+    const key = target.getAttribute('data-key') || target.closest('[data-key]')?.getAttribute('data-key')
+    if (!key) return
+    if (target.classList.contains('tag-remove')) {
+      removeSearchCategory(key)
+      loadRawMaterials()
+    }
+  })
+
   // 원재료 버튼 이벤트
   document.getElementById('add-raw-material-btn')?.addEventListener('click', () => {
     openRawMaterialModal()
@@ -886,3 +984,32 @@ function init(): void {
 }
 
 window.addEventListener('DOMContentLoaded', init)
+
+// 테이블 헤더 클릭으로 검색 카테고리 추가 설정
+function setupRawMaterialHeaderSearchListeners(): void {
+  const ths = document.querySelectorAll('#raw-materials-table thead th')
+  const keys = [
+    'testNumber',
+    'name',
+    'receivingQuantity',
+    'netWeight',
+    'weightUnit',
+    'quantity',
+    'manufacturingDate',
+    'expireDate',
+    'vendor',
+    'country',
+    'storageConditions',
+    'foodType'
+  ]
+
+  ths.forEach((th, idx) => {
+    const key = keys[idx]
+    if (!key) return
+    th.setAttribute('data-search-key', key)
+    th.classList.add('searchable')
+    th.addEventListener('click', () => {
+      addSearchCategory(key)
+    })
+  })
+}
