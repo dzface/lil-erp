@@ -58,6 +58,14 @@
         <div id="raw-materials-tab" class="tab-content">
           <div class="section-header">
             <h2>원재료 입고 내역</h2>
+            <aside id="raw-materials-search-panel" class="search-panel" style="width:500px;">
+              <div class="search-controls" style="display:flex;gap:10px;align-items:center;margin-bottom:5px;">
+                <input id="raw-materials-search-input" type="text" class="search-input" placeholder="헤더를 클릭하면 해당 카테고리가 태그로 추가됩니다." style="flex:1;padding:1px;border-radius: 30px;box-shadow: 0 0 0 2px #fff;padding: 5px 10px;" />
+                <button id="raw-materials-search-btn" class="btn btn-primary" style="white-space:nowrap">검색</button>
+              </div>
+              <div id="raw-materials-search-tags" class="search-tags" style="display:flex;flex-wrap:wrap;gap:10px;margin-bottom:0px;"></div>
+              <!-- <div style="font-size:12px;color:var(--muted,#999);">컬럼 헤더를 클릭하면 해당 카테고리가 태그로 추가됩니다. 태그의 ×로 제거.</div> -->
+            </aside>
             <div class="button-group">
               <button id="add-raw-material-btn" class="btn btn-primary">+ 입고 등록</button>
               <button id="export-raw-materials-btn" class="btn btn-xlsx">엑셀 내보내기</button>
@@ -89,15 +97,6 @@
               </tbody>
               </table>
             </div>
-            <aside id="raw-materials-search-panel" class="search-panel" style="width:320px;">
-              <h3 style="margin:0 0 8px 0;">검색</h3>
-              <div id="raw-materials-search-tags" class="search-tags" style="display:flex;flex-wrap:wrap;gap:6px;margin-bottom:8px;"></div>
-              <div class="search-controls" style="display:flex;gap:8px;align-items:center;margin-bottom:6px;">
-                <input id="raw-materials-search-input" type="text" class="search-input" placeholder="검색어 입력..." style="flex:1;padding:6px;" />
-                <button id="raw-materials-search-btn" class="btn btn-primary" style="white-space:nowrap">검색</button>
-              </div>
-              <div style="font-size:12px;color:var(--muted,#999);">컬럼 헤더를 클릭하면 해당 카테고리가 태그로 추가됩니다. 태그의 ×로 제거.</div>
-            </aside>
           </div>
         </div>
 
