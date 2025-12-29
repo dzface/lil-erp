@@ -18,6 +18,9 @@ nsis:
   shortcutName: ${productName}
   uninstallDisplayName: ${productName}
   createDesktopShortcut: always
+  oneClick: false #false: 설치 시 경로 자동지정 해제
+  allowToChangeInstallationDirectory: true # 설치경로 선택버튼 활성화
+  displayLanguageSelector: false # 언어선택 노출여부
 mac:
   entitlementsInherit: build/entitlements.mac.plist
   extendInfo:

@@ -6,7 +6,7 @@ let editingRawMaterialId: number | null = null
 let editingPackingMaterialId: number | null = null
 
 // 검색 관련 상태
-let rawMaterialsCache: RawMaterial[] = []
+//let rawMaterialsCache: RawMaterial[] = []
 let selectedSearchCategories: string[] = []
 
 const searchFieldLabels: Record<string, string> = {
@@ -103,8 +103,8 @@ async function loadRawMaterials(): Promise<void> {
     const tbody = document.getElementById('raw-materials-tbody')
     if (!tbody) return
 
-    rawMaterialsCache = materials
-
+    //rawMaterialsCache = materials
+    
     if (materials.length === 0) {
       tbody.innerHTML = '<tr><td colspan="13" class="empty-message">등록된 원재료가 없습니다.</td></tr>'
       return
